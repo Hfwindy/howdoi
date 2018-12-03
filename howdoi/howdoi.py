@@ -27,6 +27,8 @@ from pyquery import PyQuery as pq
 from requests.exceptions import ConnectionError
 from requests.exceptions import SSLError
 
+#  TODO: add logging using fileConfig()
+
 # Handle imports for Python 2 and 3
 if sys.version < '3':
     import codecs
@@ -51,7 +53,7 @@ else:
     SEARCH_URL = 'https://www.google.com/search?q=site:{0}%20{1}'
     VERIFY_SSL_CERTIFICATE = True
 
-URL = os.getenv('HOWDOI_URL') or 'stackoverflow.com'
+URL = os.getenv('HOWDOI_URL') or 'stackoverflow.com'  # https://stackoverflow.com/search?q=format+date+bash
 
 USER_AGENTS = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:11.0) Gecko/20100101 Firefox/11.0',
                'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100 101 Firefox/22.0',
