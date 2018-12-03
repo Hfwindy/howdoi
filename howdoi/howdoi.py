@@ -16,7 +16,6 @@ import re
 import requests
 import requests_cache
 import sys
-from . import __version__
 
 from pygments import highlight
 from pygments.lexers import guess_lexer, get_lexer_by_name
@@ -27,23 +26,12 @@ from pyquery import PyQuery as pq
 from requests.exceptions import ConnectionError
 from requests.exceptions import SSLError
 
-#  TODO: add logging using fileConfig()
+#  Comment out the version snippet and leave the usefule part
+from urllib.request import getproxies
+from urllib.parse import quote as url_quote
 
-# Handle imports for Python 2 and 3
-if sys.version < '3':
-    import codecs
-    from urllib import quote as url_quote
-    from urllib import getproxies
-
-    # Handling Unicode: http://stackoverflow.com/a/6633040/305414
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
-else:
-    from urllib.request import getproxies
-    from urllib.parse import quote as url_quote
-
-    def u(x):
-        return x
+def u(x):
+    return x
 
 
 if os.getenv('HOWDOI_DISABLE_SSL'):  # Set http instead of https
@@ -269,5 +257,37 @@ def command_line_runner():
         print(howdoi(args))
 
 
+#  add logging to howdoi
+import logging
+import logging.config
+
+#  TODO: add logging using fileConfig()
+def prepare_logger(log_file):
+
+    """Create a logger
+
+    Create a formatter, and a file_handler, and attach the formatter, the 
+    file_handler to the logger
+
+    """
+    #  Create logger
+    logger = logging.getLogger("hdi")
+    logger.setLevel(logging.INFO)
+    #  Create formatter with log format
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    #  Create file_handler with log file as argument
+    assert os.path.exists(log_file), '{} file does not exist.'.format(log_file)
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.INFO)
+    #  Attach formatter to file_handler
+    file_handler.setFormatter(formatter)
+    #  Attach file_handler to logger
+    logger.addHandler(file_handler)
+
+    return logger
+
 if __name__ == '__main__':
+    lo = prepare_logger('hdi.log')
+    lo.info('=========  Start of the command_line_runner() =========')
     command_line_runner()
+    lo.info('=========  End of the command_line_runner() =========')
