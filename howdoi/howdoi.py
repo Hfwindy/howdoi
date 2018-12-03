@@ -33,6 +33,9 @@ from urllib.parse import quote as url_quote
 def u(x):
     return x
 
+import logging
+import logging.config
+
 
 if os.getenv('HOWDOI_DISABLE_SSL'):  # Set http instead of https
     SEARCH_URL = 'http://www.google.com/search?q=site:{0}%20{1}'
@@ -228,9 +231,14 @@ def get_parser():
 
 
 def command_line_runner():
+
+    logger = logging.getLogger('hdi')
+    
     parser = get_parser()
     args = vars(parser.parse_args())
 
+    logger.info("args are {}".format(args))
+    
     if args['version']:
         print(__version__)
         return
@@ -239,6 +247,8 @@ def command_line_runner():
         _clear_cache()
         print('Cache cleared successfully')
         return
+
+
 
     if not args['query']:
         parser.print_help()
@@ -257,37 +267,27 @@ def command_line_runner():
         print(howdoi(args))
 
 
-#  add logging to howdoi
-import logging
-import logging.config
 
-#  TODO: add logging using fileConfig()
-def prepare_logger(log_file):
 
-    """Create a logger
+def prepare_logger(log_file, config_file):
 
-    Create a formatter, and a file_handler, and attach the formatter, the 
-    file_handler to the logger
+    """Create a logger based on a configuration file
 
     """
+    # set up logging
+    assert os.path.exists(log_file), '{} file does not exist.'.format(log_file)
+    assert os.path.exists(config_file), '{} file does not exist.'.format(config_file)
+
+    # set the logging configuration file
+    logging.config.fileConfig(os.path.join(sys.path[0],config_file))
+
     #  Create logger
     logger = logging.getLogger("hdi")
-    logger.setLevel(logging.INFO)
-    #  Create formatter with log format
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    #  Create file_handler with log file as argument
-    assert os.path.exists(log_file), '{} file does not exist.'.format(log_file)
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.INFO)
-    #  Attach formatter to file_handler
-    file_handler.setFormatter(formatter)
-    #  Attach file_handler to logger
-    logger.addHandler(file_handler)
 
     return logger
 
 if __name__ == '__main__':
-    lo = prepare_logger('hdi.log')
-    lo.info('=========  Start of the command_line_runner() =========')
+    lo = prepare_logger('hdi.log', 'logging.conf')
+    lo.info('=========  Start  =========')
     command_line_runner()
-    lo.info('=========  End of the command_line_runner() =========')
+    lo.info('=========  End    =========')
