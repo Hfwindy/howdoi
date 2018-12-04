@@ -17,6 +17,7 @@ import re
 import requests
 import requests_cache
 import sys
+from __init__ import __version__
 
 from pygments import highlight
 from pygments.lexers import guess_lexer, get_lexer_by_name
@@ -249,13 +250,12 @@ def command_line_runner():
         print('Cache cleared successfully')
         return
 
-
-
     if not args['query']:
         parser.print_help()
         return
 
     # enable the cache if user doesn't want it to be disabled
+    # When and where does the environment varialbes have been set?
     if not os.getenv('HOWDOI_DISABLE_CACHE'):
         _enable_cache()
 
