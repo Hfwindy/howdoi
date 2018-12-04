@@ -268,7 +268,7 @@ def command_line_runner():
         print(howdoi(args))
 
 
-
+#  my hack on howdoi
 
 def config_logger(log_file, config_file):
 
@@ -279,7 +279,6 @@ def config_logger(log_file, config_file):
     assert os.path.exists(log_file), '{} file does not exist.'.format(log_file)
     assert os.path.exists(config_file), '{} file does not exist.'.format(config_file)
 
-    # set the logging configuration file
     logging.config.fileConfig(os.path.join(sys.path[0],config_file))
 
 
@@ -287,6 +286,6 @@ if __name__ == '__main__':
     config_logger('hdi.log', 'logging.conf')
     # create a logger
     lgr = logging.getLogger("hdi")
-    lgr.info('=========  Start  1=========')
+    lgr.info('=========  Start  =========')
     command_line_runner()
-    lgr.info('=========  End    1=========')
+    lgr.info('=========  End    =========')
