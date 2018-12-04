@@ -270,9 +270,9 @@ def command_line_runner():
 
 
 
-def prepare_logger(log_file, config_file):
+def config_logger(log_file, config_file):
 
-    """Create a logger based on a configuration file
+    """Configure a logger based on a file
 
     """
     # set up logging
@@ -282,13 +282,11 @@ def prepare_logger(log_file, config_file):
     # set the logging configuration file
     logging.config.fileConfig(os.path.join(sys.path[0],config_file))
 
-    #  Create logger
-    logger = logging.getLogger("hdi")
-
-    return logger
 
 if __name__ == '__main__':
-    lo = prepare_logger('hdi.log', 'logging.conf')
-    lo.info('=========  Start  =========')
+    config_logger('hdi.log', 'logging.conf')
+    # create a logger
+    lgr = logging.getLogger("hdi")
+    lgr.info('=========  Start  1=========')
     command_line_runner()
-    lo.info('=========  End    =========')
+    lgr.info('=========  End    1=========')
