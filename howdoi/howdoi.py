@@ -40,10 +40,12 @@ import logging.config
 
 
 if os.getenv('HOWDOI_DISABLE_SSL'):  # Set http instead of https
-    SEARCH_URL = 'http://www.google.com/search?q=site:{0}%20{1}'
+    #  SEARCH_URL = 'http://www.google.com/search?q=site:{0}%20{1}'
+    SEARCH_URL = 'http://www.bing.com/search?q=site:{0}%20{1}'  # bing.com
     VERIFY_SSL_CERTIFICATE = False
 else:
-    SEARCH_URL = 'https://www.google.com/search?q=site:{0}%20{1}'
+    #  SEARCH_URL = 'https://www.google.com/search?q=site:{0}%20{1}'
+    SEARCH_URL = 'https://www.bing.com/search?q=site:{0}%20{1}'  # bing.com
     VERIFY_SSL_CERTIFICATE = True
 
 URL = os.getenv('HOWDOI_URL') or 'stackoverflow.com'  # https://stackoverflow.com/search?q=format+date+bash
@@ -67,12 +69,17 @@ CACHE_FILE = os.path.join(CACHE_DIR, 'cache{0}'.format(
 def get_proxies():
     proxies = getproxies()
     filtered_proxies = {}
+    lgr = logging.getLogger('hdi')
+    lgr.info('proxies is {}'.format(proxies))
+    lgr.info('Before filtering filtered_proxies is {}'.format(filtered_proxies))
+
     for key, value in proxies.items():
         if key.startswith('http'):
             if not value.startswith('http'):
                 filtered_proxies[key] = 'http://%s' % value
             else:
                 filtered_proxies[key] = value
+    lgr.info('After filtering filtered_proxies is {}'.format(filtered_proxies))
     return filtered_proxies
 
 
@@ -87,8 +94,20 @@ def _get_result(url):
 
 
 def _get_links(query):
+    lgr = logging.getLogger('hdi')
+    lgr.info('URL is {}'.format(URL))
+    lgr.info('SEARCH_URL is {}'.format(SEARCH_URL))
+    # lgr.info('query is {}'.format(url_quote(query)))
+    lgr.info('url_quote({}) is {}'.format(query,url_quote(query)))
+                                            
     result = _get_result(SEARCH_URL.format(URL, url_quote(query)))
+    #  the argument is : https://cn.bing.com/search?q=site:stackoverflow.com%20format%20date%20bash
+    #  %20 is space
+    #  lgr.info('result is {}'.format(result))
     html = pq(result)
+    #  lgr.info('html is {}'.format(html))
+    # for bing.com, you need to figure out how to  get the 'href' url.
+    lgr.info('What is about to return are {}'.format([a.attrib['href'] for a in html('.l')] or [a.attrib['href'] for a in html('.r')('a')]))
     return [a.attrib['href'] for a in html('.l')] or \
         [a.attrib['href'] for a in html('.r')('a')]
 
