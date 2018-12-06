@@ -94,6 +94,20 @@ def _get_result(url):
 
 
 def _get_links(query):
+    """Get the links of the query
+
+    1. for bing.com, you need to figure out how to  get the 'href' url.
+
+    2. for i in d('a').items(): print((i.attr['href']))
+    we get results with relative urls and anchors which need to be filtered out, such as,
+    #python-network
+    /community/diversity/
+    https://github.com/python/pythondotorg/issues
+    
+    3. my solution to get links which has been filtered out relative urls and inline anchors.
+    [i.attr('href') for i in d('a').items() if i.attr('href').startswith("http")] with extra restrictions
+    [i.attr('href') for i in d('a').items() if (not i.attr('href') == None) and (i.attr('href').startswith("http") == True)]
+    """
     lgr = logging.getLogger('hdi')
     lgr.info('URL is {}'.format(URL))
     lgr.info('SEARCH_URL is {}'.format(SEARCH_URL))
@@ -101,33 +115,15 @@ def _get_links(query):
                                             
     result = _get_result(SEARCH_URL.format(URL, url_quote(query)))
     #  the argument is : https://cn.bing.com/search?q=site:stackoverflow.com%20format%20date%20bash     %20 is space
-    
     d = pq(result)
     # lgr.info('result is {}'.format(result))
     # lgr.info('html is {}'.format(d))
-    
-    # 1.
-    # for bing.com, you need to figure out how to  get the 'href' url.
-
-    # 2.
-    # for i in d('a').items():
-    #     print((i.attr['href']))
-    # we get results with relative urls and anchors which need to be filtered out, such as,
-    # #python-network
-    # /community/diversity/
-    # https://github.com/python/pythondotorg/issues
-    # 3.
-    #  my solution to get links which has been filtered out relative urls and inline anchors.
-    # [i.attr('href') for i in d('a').items() if i.attr('href').startswith("http")] with extra restrictions
-    # [i.attr('href') for i in d('a').items() if (not i.attr('href') == None) and (i.attr('href').startswith("http") == True)]
     return_value = []
     for i in d('a').items():
         if (not i.attr('href') == None) and (i.attr('href').startswith("http") == True) :
         #  if i.attr('href') and i.attr('href').startswith("http"):  same effect but less clearance
             return_value.append(i.attr('href'))
-
     lgr.info(return_value)
-
     return return_value
 
 
