@@ -9,6 +9,10 @@
 #
 ######################################################
 
+#  test:
+#  format date bash
+#  -c format date
+#  bash format date
 import argparse
 import glob
 import os
@@ -34,10 +38,6 @@ from urllib.parse import quote as url_quote
 
 def u(x):
     return x
-
-import logging
-import logging.config
-
 
 if os.getenv('HOWDOI_DISABLE_SSL'):  # Set http instead of https
     #  SEARCH_URL = 'http://www.google.com/search?q=site:{0}%20{1}'
@@ -84,6 +84,8 @@ def get_proxies():
 
 
 def _get_result(url):
+    lgr = logging.getLogger("hdi")
+    lgr.debug("answer's link: {}".format(url))
     try:
         return requests.get(url, headers={'User-Agent': random.choice(USER_AGENTS)}, proxies=get_proxies(),
                             verify=VERIFY_SSL_CERTIFICATE).text
@@ -123,14 +125,14 @@ def _get_links(query):
         if (not i.attr('href') == None) and (i.attr('href').startswith("http") == True) :
         #  if i.attr('href') and i.attr('href').startswith("http"):  same effect but less clearance
             return_value.append(i.attr('href'))
-    lgr.info(return_value)
+    #  lgr.info(return_value) # get the links
     return return_value
 
 
 def get_link_at_pos(links, position):
     if not links:
         return False
-
+    #  start from 0, so offset by 1
     if len(links) >= position:
         link = links[position - 1]
     else:
@@ -169,22 +171,42 @@ def _is_question(link):
 
 
 def _get_questions(links):
+    #  lgr = logging.getLogger("hdi")
+    #  lgr.debug("links: {}".format(links))
     return [link for link in links if _is_question(link)]
 
 
 def _get_answer(args, links):
+
+    lgr = logging.getLogger("hdi")
+    
     links = _get_questions(links)
+
+    lgr.debug("links that consist of `questions/\d+/`: {}".format(links))
+    
     link = get_link_at_pos(links, args['pos'])
     if not link:
         return False
     if args.get('link'):
         return link
     page = _get_result(link + '?answertab=votes')
+    #  https://stackoverflow.com/questions/6508819/convert-date-formats-in-bash?answertab=votes
     html = pq(page)
+
+    # lgr.debug("page: {}".format(page))
+    # lgr.debug("html: {}".format(html))
 
     first_answer = html('.answer').eq(0)
     instructions = first_answer.find('pre') or first_answer.find('code')
     args['tags'] = [t.text for t in html('.post-tag')]
+
+    lgr.debug("first_answer: {}".format(first_answer))
+    lgr.debug("first_answer.find('pre'):{} ".format(first_answer.find('pre')))
+    lgr.debug("first_answer.find('code'): {}".format(first_answer.find('code')))
+    lgr.debug("args['tags']: {}".format(args['tags']))
+
+    lgr.debug("instructions: {}".format(instructions))
+    lgr.debug("args['all']: {}".format(args['all']))
 
     if not instructions and not args['all']:
         text = first_answer.find('.post-text').eq(0).text()
@@ -200,10 +222,14 @@ def _get_answer(args, links):
         texts.append('\n---\nAnswer from {0}'.format(link))
         text = '\n'.join(texts)
     else:
+        lgr.debug("text before format: {}".format(instructions.eq(0).text()))
         text = _format_output(instructions.eq(0).text(), args)
     if text is None:
         text = NO_ANSWER_MSG
     text = text.strip()
+
+    lgr.debug("text: {}".format(text))
+
     return text
 
 
@@ -215,16 +241,30 @@ def _get_instructions(args):
     answers = []
     append_header = args['num_answers'] > 1
     initial_position = args['pos']
+
+    lgr = logging.getLogger("hdi")
+    lgr.info("answers: {}".format(answers))
+    lgr.info("args['num_answers']: {}".format(args['num_answers']))
+    lgr.info("append_header: {}".format(append_header))
+    lgr.info("initial_position: {}".format(initial_position))
+    
     for answer_number in range(args['num_answers']):
-        current_position = answer_number + initial_position
+        current_position = answer_number + initial_position # offset from answer_number
+
+        lgr.info("current_position: {}".format(current_position))
+        
         args['pos'] = current_position
         answer = _get_answer(args, links)
+
+        lgr.info("answer: {}".format(answer))
+        
         if not answer:
             continue
         if append_header:
             answer = ANSWER_HEADER.format(current_position, answer)
         answer += '\n'
         answers.append(answer)
+    lgr.info("answers: {}".format(answers))
     return '\n'.join(answers)
 
 
@@ -301,23 +341,11 @@ def command_line_runner():
     else:
         print(howdoi(args))
 
-
-#  my hack on howdoi
-
-def config_logger(log_file, config_file):
-
-    """Configure a logger based on a file
-
-    """
-    # set up logging
-    assert os.path.exists(log_file), '{} file does not exist.'.format(log_file)
-    assert os.path.exists(config_file), '{} file does not exist.'.format(config_file)
-
-    logging.config.fileConfig(os.path.join(sys.path[0],config_file))
-
+import cl  # config logging
+import logging
 
 if __name__ == '__main__':
-    config_logger('hdi.log', 'logging.conf')
+    cl.config_logger('hdi.log', 'logging.conf')
     # create a logger
     lgr = logging.getLogger("hdi")
     lgr.info('=========  Start  =========')
